@@ -60,6 +60,19 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 COPY --from=download /repositories/ ${ROOT}/repositories/
 RUN mkdir ${ROOT}/interrogate && cp ${ROOT}/repositories/clip-interrogator/data/* ${ROOT}/interrogate
 
+RUN mkdir -p ${ROOT}/models/Stable-diffusion/ \
+    ${ROOT}/models/VAE/ \
+    ${ROOT}/models/Lora/ \
+    ${ROOT}/extensions/
+
+RUN cd ${ROOT}/extensions && \
+    git clone https://github.com/ljleb/sd-webui-freeu && \
+    git clone https://github.com/ashen-sensored/sd_webui_SAG.git
+
+# COPY ./diffusion_data/mode[l]/* ${ROOT}/models/Stable-diffusion/
+# COPY ./diffusion_data/va[e]/* ${ROOT}/models/VAE/
+# COPY ./diffusion_data/lor[a]/* ${ROOT}/models/Lora/
+
 # Install Python dependencies (Worker Template)
 COPY builder/requirements.txt /requirements.txt
 RUN --mount=type=cache,target=/root/.cache/pip \
@@ -71,19 +84,6 @@ COPY src/* /
 
 COPY builder/cache.py /stable-diffusion-webui/cache.py
 # RUN cd /stable-diffusion-webui && python cache.py --use-cpu=all --ckpt ${ROOT}/models/Stable-diffusion/turbovisionxlSuperFastXLBasedOnNew_tvxlV431Bakedvae.safetensors
-
-RUN mkdir -p ${ROOT}/models/Stable-diffusion/ \
-    ${ROOT}/models/VAE/ \
-    ${ROOT}/models/Lora/ \
-    ${ROOT}/extensions/
-
-RUN cd ${ROOT}/extensions && \
-    git clone https://github.com/ljleb/sd-webui-freeu && \
-    git clone https://github.com/ashen-sensored/sd_webui_SAG.git
-
-COPY ./diffusion_data/mode[l]/* ${ROOT}/models/Stable-diffusion/
-COPY ./diffusion_data/va[e]/* ${ROOT}/models/VAE/
-COPY ./diffusion_data/lor[a]/* ${ROOT}/models/Lora/
 
 # Cleanup section (Worker Template)
 RUN apt-get autoremove -y && \

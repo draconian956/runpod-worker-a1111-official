@@ -1,5 +1,1 @@
-typing-extensions
-altair
 xformers
-openai-clip
-pytorch_lightning
