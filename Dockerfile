@@ -39,6 +39,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     ROOT=/stable-diffusion-webui \
     PYTHONUNBUFFERED=1
 
+WORKDIR /
+
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN export COMMANDLINE_ARGS="--skip-torch-cuda-test --precision full --no-half"
@@ -53,17 +55,17 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git && \
     cd stable-diffusion-webui && \
     git reset --hard ${SHA} && \
-    pip install -r requirements_versions.txt
+    pip install -r requirements.txt
 
 COPY --from=download /repositories/ ${ROOT}/repositories/
 RUN mkdir ${ROOT}/interrogate && cp ${ROOT}/repositories/clip-interrogator/data/* ${ROOT}/interrogate
 
 # Install Python dependencies (Worker Template)
-# COPY builder/requirements.txt /requirements.txt
-# RUN --mount=type=cache,target=/root/.cache/pip \
-#     pip install --upgrade pip && \
-#     pip install --upgrade -r /requirements.txt --no-cache-dir && \
-#     rm /requirements.txt
+COPY builder/requirements.txt /requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip && \
+    pip install --upgrade -r /requirements.txt --no-cache-dir && \
+    rm /requirements.txt
 
 COPY src/* /
 
@@ -90,4 +92,7 @@ RUN apt-get autoremove -y && \
 
 # Set permissions and specify the command to run
 RUN chmod +x /start.sh
+
+WORKDIR ${ROOT}
+
 CMD /start.sh
