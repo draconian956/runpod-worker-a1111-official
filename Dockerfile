@@ -1,34 +1,35 @@
 # ---------------------------------------------------------------------------- #
 #                         Stage 1: Download the models                         #
 # ---------------------------------------------------------------------------- #
-FROM alpine/git:2.36.2 as download
+FROM alpine/git:2.36.2 AS download
 
 COPY builder/clone.sh /clone.sh
 
-# Clone the repos and clean unnecessary files
-RUN . /clone.sh taming-transformers https://github.com/CompVis/taming-transformers.git 24268930bf1dce879235a7fddd0b2355b84d7ea6 && \
-    rm -rf data assets **/*.ipynb
+RUN git config --global http.postBuffer 524288000 && \
+    git config --global http.lowSpeedLimit 0 && \
+    git config --global http.lowSpeedTime 999999
 
-RUN . /clone.sh stable-diffusion-stability-ai https://github.com/Stability-AI/stablediffusion.git 47b6b607fdd31875c9279cd2f4f16b92e4ea958e && \
-    rm -rf assets data/**/*.png data/**/*.jpg data/**/*.gif
+RUN . /clone.sh stable-diffusion-webui-assets https://github.com/AUTOMATIC1111/stable-diffusion-webui-assets.git 6f7db241d2f8ba7457bac5ca9753331f0c266917
 
-RUN . /clone.sh CodeFormer https://github.com/sczhou/CodeFormer.git c5b4593074ba6214284d6acd5f1719b6c5d739af && \
-    rm -rf assets inputs
+RUN . /clone.sh stable-diffusion-stability-ai https://github.com/Stability-AI/stablediffusion.git cf1d67a6fd5ea1aa600c4df58e5b47da45f6bdbf \
+  && rm -rf assets data/**/*.png data/**/*.jpg data/**/*.gif
 
 RUN . /clone.sh BLIP https://github.com/salesforce/BLIP.git 48211a1594f1321b00f14c9f7a5b4813144b2fb9 && \
     . /clone.sh k-diffusion https://github.com/crowsonkb/k-diffusion.git 5b3af030dd83e0297272d861c19477735d0317ec && \
     . /clone.sh clip-interrogator https://github.com/pharmapsychotic/clip-interrogator 2486589f24165c8e3b303f84e9dbbea318df83e8 && \
     . /clone.sh generative-models https://github.com/Stability-AI/generative-models 45c443b316737a4ab6e40413d7794a7f5657c19f
 
-RUN apk add --no-cache wget && \
-    wget -q -O /model.safetensors https://civitai.com/api/download/models/15236
+RUN . /clone.sh stable-diffusion-webui-assets https://github.com/AUTOMATIC1111/stable-diffusion-webui-assets 6f7db241d2f8ba7457bac5ca9753331f0c266917
+
+RUN apk add --no-cache wget
 
 
 
 # ---------------------------------------------------------------------------- #
 #                        Stage 3: Build the final image                        #
 # ---------------------------------------------------------------------------- #
-FROM python:3.10.9-slim as build_final_image
+# FROM python:3.10.9-slim AS build_final_image
+FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime AS build_final_image
 
 ARG SHA=5ef669de080814067961f28357256e8fe27544f4
 
@@ -45,35 +46,42 @@ RUN export TORCH_COMMAND='pip install --pre torch torchvision torchaudio --extra
 
 RUN apt-get update && \
     apt install -y \
-    fonts-dejavu-core rsync git jq moreutils aria2 wget libgoogle-perftools-dev procps libgl1 libglib2.0-0 && \
+    fonts-dejavu-core rsync git jq moreutils aria2 wget libgoogle-perftools-dev procps libgl1 libglib2.0-0 build-essential && \
     apt-get autoremove -y && rm -rf /var/lib/apt/lists/* && apt-get clean -y
-
-RUN --mount=type=cache,target=/cache --mount=type=cache,target=/root/.cache/pip \
-    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git && \
     cd stable-diffusion-webui && \
-    git reset --hard ${SHA}
-#&& \ pip install -r requirements_versions.txt
+    git reset --hard ${SHA} && \
+    pip install -r requirements_versions.txt
 
 COPY --from=download /repositories/ ${ROOT}/repositories/
-COPY --from=download /model.safetensors /model.safetensors
 RUN mkdir ${ROOT}/interrogate && cp ${ROOT}/repositories/clip-interrogator/data/* ${ROOT}/interrogate
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -r ${ROOT}/repositories/CodeFormer/requirements.txt
 
 # Install Python dependencies (Worker Template)
-COPY builder/requirements.txt /requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --upgrade pip && \
-    pip install --upgrade -r /requirements.txt --no-cache-dir && \
-    rm /requirements.txt
+# COPY builder/requirements.txt /requirements.txt
+# RUN --mount=type=cache,target=/root/.cache/pip \
+#     pip install --upgrade pip && \
+#     pip install --upgrade -r /requirements.txt --no-cache-dir && \
+#     rm /requirements.txt
 
-ADD src .
+COPY src/* /
 
 COPY builder/cache.py /stable-diffusion-webui/cache.py
-RUN cd /stable-diffusion-webui && python cache.py --use-cpu=all --ckpt /model.safetensors
+# RUN cd /stable-diffusion-webui && python cache.py --use-cpu=all --ckpt ${ROOT}/models/Stable-diffusion/turbovisionxlSuperFastXLBasedOnNew_tvxlV431Bakedvae.safetensors
+
+RUN mkdir -p ${ROOT}/models/Stable-diffusion/ \
+    ${ROOT}/models/VAE/ \
+    ${ROOT}/models/Lora/ \
+    ${ROOT}/extensions/
+
+RUN cd ${ROOT}/extensions && \
+    git clone https://github.com/ljleb/sd-webui-freeu && \
+    git clone https://github.com/ashen-sensored/sd_webui_SAG.git
+
+COPY ./diffusion_data/mode[l]/* ${ROOT}/models/Stable-diffusion/
+COPY ./diffusion_data/va[e]/* ${ROOT}/models/VAE/
+COPY ./diffusion_data/lor[a]/* ${ROOT}/models/Lora/
 
 # Cleanup section (Worker Template)
 RUN apt-get autoremove -y && \
