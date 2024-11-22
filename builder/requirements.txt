@@ -1,1 +1,2 @@
-xformers
+typing_extensions
+runpod
