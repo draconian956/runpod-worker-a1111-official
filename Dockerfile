@@ -24,7 +24,7 @@ ENV DEBIAN_FRONTEND=noninteractive PIP_PREFER_BINARY=1
 RUN --mount=type=cache,target=/var/cache/apt \
 	apt-get update && \
 	# we need those
-	apt-get install -y fonts-dejavu-core rsync git jq moreutils aria2 \
+	apt-get install -y fonts-dejavu-core rsync git jq moreutils aria2 wget zip unzip \
 	# extensions needs those
 	ffmpeg libglfw3-dev libgles2-mesa-dev pkg-config libcairo2 libcairo2-dev build-essential
 
@@ -69,12 +69,12 @@ RUN cd ${ROOT}/extensions && \
 # COPY ./diffusion_data/va[e]/* ${ROOT}/models/VAE/
 # COPY ./diffusion_data/lor[a]/* ${ROOT}/models/Lora/
 
-RUN apt-get -y install wget zip unzip
-
 RUN cd ${ROOT}/models/Stable-diffusion/ && \
+	touch turbovisionxlSuperFastXLBasedOnNew_tvxlV431Bakedvae.safetensors && \
 	wget -O turbovisionxlSuperFastXLBasedOnNew_tvxlV431Bakedvae.safetensors "https://civitai.com/api/download/models/273102?type=Model&format=SafeTensor&size=pruned&fp=fp16&token=2a706218b26bdfd6a0651cc3d7d5520d"
 
 RUN cd ${ROOT}/models/VAE/ && \
+	touch sdxl_vae.safetensors && \
 	wget -O sdxl_vae.safetensors "https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors"
 
 # Install Python dependencies (Worker Template)
