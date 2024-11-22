@@ -164,4 +164,3 @@ cython_debug/
 
 *.safetensors
 /stable-diffusion-webui
-/git_clone_repo
