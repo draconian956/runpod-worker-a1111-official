@@ -30,14 +30,14 @@ RUN --mount=type=cache,target=/var/cache/apt \
 
 WORKDIR /
 
-# RUN --mount=type=cache,target=/root/.cache/pip \
-#     git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git && \
-#     cd stable-diffusion-webui && \
-#     python -m pip install -r requirements_versions.txt
-
-COPY ./sd_webui/stable-diffusion-webui /stable-diffusion-webui/
-RUN cd stable-diffusion-webui && \
+RUN --mount=type=cache,target=/root/.cache/pip \
+    git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git && \
+    cd stable-diffusion-webui && \
     python -m pip install -r requirements_versions.txt
+
+# COPY ./sd_webui/stable-diffusion-webui /stable-diffusion-webui/
+# RUN cd stable-diffusion-webui && \
+#     python -m pip install -r requirements_versions.txt
 
 ENV ROOT=/stable-diffusion-webui
 
