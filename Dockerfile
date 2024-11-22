@@ -69,6 +69,8 @@ RUN cd ${ROOT}/extensions && \
 # COPY ./diffusion_data/va[e]/* ${ROOT}/models/VAE/
 # COPY ./diffusion_data/lor[a]/* ${ROOT}/models/Lora/
 
+RUN apt-get -y install wget zip unzip
+
 RUN cd ${ROOT}/models/Stable-diffusion/ && \
 	wget -O turbovisionxlSuperFastXLBasedOnNew_tvxlV431Bakedvae.safetensors "https://civitai.com/api/download/models/273102?type=Model&format=SafeTensor&size=pruned&fp=fp16&token=2a706218b26bdfd6a0651cc3d7d5520d"
 
