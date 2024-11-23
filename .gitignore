@@ -163,4 +163,3 @@ cython_debug/
 *.png
 
 *.safetensors
-/stable-diffusion-webui
