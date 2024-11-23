@@ -60,10 +60,6 @@ RUN mkdir -p ${ROOT}/models/Stable-diffusion/ \
 	${ROOT}/embeddings/ \
 	${ROOT}/extensions/
 
-RUN cd ${ROOT}/extensions && \
-	git clone https://github.com/ljleb/sd-webui-freeu && \
-	git clone https://github.com/ashen-sensored/sd_webui_SAG.git
-
 # COPY ./diffusion_data/mode[l]/* ${ROOT}/models/Stable-diffusion/
 # COPY ./diffusion_data/va[e]/* ${ROOT}/models/VAE/
 # COPY ./diffusion_data/lor[a]/* ${ROOT}/models/Lora/
@@ -79,6 +75,10 @@ RUN cd ${ROOT}/models/VAE/ && \
 RUN cd ${ROOT}/embeddings/ && \
 	touch EasyNegativeV2.safetensors && \
 	wget -O EasyNegativeV2.safetensors "https://civitai.com/api/download/models/107234?type=Model&format=SafeTensor&token=2a706218b26bdfd6a0651cc3d7d5520d"
+
+RUN cd ${ROOT}/extensions && \
+	git clone https://github.com/ljleb/sd-webui-freeu.git && \
+	git clone https://github.com/AG-w/sd_webui_SAG.git
 
 # Install Python dependencies (Worker Template)
 COPY builder/requirements.txt /requirements.txt
