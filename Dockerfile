@@ -57,6 +57,7 @@ ENV LD_PRELOAD=libtcmalloc.so
 RUN mkdir -p ${ROOT}/models/Stable-diffusion/ \
 	${ROOT}/models/VAE/ \
 	${ROOT}/models/Lora/ \
+	${ROOT}/embeddings/ \
 	${ROOT}/extensions/
 
 RUN cd ${ROOT}/extensions && \
@@ -74,6 +75,10 @@ RUN cd ${ROOT}/models/Stable-diffusion/ && \
 RUN cd ${ROOT}/models/VAE/ && \
 	touch sdxl_vae.safetensors && \
 	wget -O sdxl_vae.safetensors "https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors"
+
+RUN cd ${ROOT}/embeddings/ && \
+	touch EasyNegativeV2.safetensors && \
+	wget -O EasyNegativeV2.safetensors "https://civitai.com/api/download/models/107234?type=Model&format=SafeTensor&token=2a706218b26bdfd6a0651cc3d7d5520d"
 
 # Install Python dependencies (Worker Template)
 COPY builder/requirements.txt /requirements.txt
