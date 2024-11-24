@@ -77,8 +77,7 @@ RUN cd ${ROOT}/embeddings/ && \
 	wget -O EasyNegativeV2.safetensors "https://civitai.com/api/download/models/107234?type=Model&format=SafeTensor&token=2a706218b26bdfd6a0651cc3d7d5520d"
 
 RUN cd ${ROOT}/extensions && \
-	git clone https://github.com/ljleb/sd-webui-freeu.git && \
-	git clone https://github.com/AG-w/sd_webui_SAG.git
+	git clone https://github.com/ljleb/sd-webui-freeu.git
 
 # Install Python dependencies (Worker Template)
 COPY builder/requirements.txt /requirements.txt
